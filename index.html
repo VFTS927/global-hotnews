@@ -157,7 +157,7 @@ function renderContent() {
     
     html += `
     <div class="card" onclick="openLink('${(art.link||'').replace(/'/g,"\\'")}')">
-      <div class="card-title">${escapeHtml(art.title)}</div>
+      <div class="card-title">${escapeHtml(art.title_cn || art.title)}</div>
       <div class="card-meta">
         <span class="card-source source-${sourceType}">${art.source}</span>
         ${catLabel}
