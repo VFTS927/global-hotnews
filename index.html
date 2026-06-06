@@ -14,233 +14,129 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .header{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#1a1a2e,#16213e);padding:12px 16px 0;border-bottom:1px solid rgba(255,255,255,.06)}
 .header h1{font-size:20px;font-weight:700;text-align:center;margin-bottom:4px}
 .header h1 span{font-size:22px}
-.status-bar{display:flex;justify-content:center;align-items:center;padding:0 4px 8px;font-size:11px;color:#888;gap:8px}
+.status-bar{display:flex;justify-content:center;align-items:center;padding:0 4px 6px;font-size:11px;color:#888;gap:10px;flex-wrap:wrap}
 .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .sort-row{display:flex;gap:4px;padding-bottom:8px}
 .sort-btn{flex:1;padding:5px 0;border-radius:16px;font-size:11px;font-weight:500;background:rgba(255,255,255,.05);color:#777;border:none;cursor:pointer;transition:.15s;text-align:center}
 .sort-btn.active{background:rgba(255,255,255,.12);color:#e0e0e0}
-.sort-btn .icon{font-size:13px}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;background:rgba(255,255,255,.06);color:#999;border:none;cursor:pointer;transition:.2s;white-space:nowrap}
 .tab.active{background:#e94560;color:#fff}
-.tab .count{font-size:11px;opacity:.7;margin-left:4px}
 .content{padding:12px 14px;padding-bottom:40px}
 .card{background:rgba(255,255,255,.04);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid rgba(255,255,255,.04);transition:.15s;cursor:pointer}
 .card:active{background:rgba(255,255,255,.08)}
 .card-title{font-size:15px;font-weight:500;line-height:1.45;margin-bottom:8px;color:#f0f0f0}
-.card-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:#666}
+.card-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:#666;flex-wrap:wrap}
 .card-source{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
 .source-rss{background:rgba(0,180,216,.2);color:#00b4d8}
 .source-hot{background:rgba(233,69,96,.2);color:#e94560}
 .card-time{flex:1;text-align:right}
 .card-summary{font-size:12px;color:#888;margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .empty{text-align:center;padding:60px 20px;color:#555}
-.empty small{display:block;margin-top:8px}
 .footer{text-align:center;padding:20px;font-size:11px;color:#444}
 .footer a{color:#666}
 </style>
 </head>
 <body>
-
 <div class="header">
-  <h1><span>🔥</span> 全球热点</h1>
-  <div class="status-bar">
-    <span id="status">加载中...</span>
-    <span id="updated"></span>
-  </div>
-  <div class="sort-row" id="sortRow">
-    <button class="sort-btn active" onclick="setSort('time')"><span class="icon">🕐</span> 最新</button>
-    <button class="sort-btn" onclick="setSort('hot')"><span class="icon">🔥</span> 热度</button>
-    <button class="sort-btn" onclick="setSort('news')"><span class="icon">⭐</span> 综合</button>
-  </div>
-  <div class="tabs" id="tabs"></div>
+<h1><span>🔥</span> 全球热点</h1>
+<div class="status-bar">
+<span id="status">加载中...</span>
+<span id="dataTime"></span>
+<span id="fetchTime"></span>
 </div>
-
-<div class="content" id="content">
-  <div class="empty">加载中...</div>
+<div class="sort-row">
+<button class="sort-btn active" onclick="setSort('time')">🕐 最新</button>
+<button class="sort-btn" onclick="setSort('hot')">🔥 热度</button>
+<button class="sort-btn" onclick="setSort('news')">⭐ 综合</button>
 </div>
-
-<div class="footer">
-  每30分钟自动更新 · <a href="https://github.com/VFTS927/global-hotnews" target="_blank">VFTS927/global-hotnews</a>
+<div class="tabs" id="tabs"></div>
 </div>
-
+<div class="content" id="content"><div class="empty">加载中...</div></div>
+<div class="footer">每30分钟自动更新 · <a href="https://github.com/VFTS927/global-hotnews">VFTS927/global-hotnews</a></div>
 <script>
-// =============== State ===============
-let data = null;
-let activeTab = "全部";
-let sortMode = "time";
-let categories = ["全部","时政热点","民生大事","国际要闻","军事战争"];
-let catEmoji = {"时政热点":"🏛","民生大事":"🏠","国际要闻":"🌍","军事战争":"⚔"};
-let hotSources = {"百度热搜":1,"头条热榜":1,"B站热搜":1,"微博热搜":1};
+let data=null,activeTab="全部",sortMode="time";
+let categories=["全部","时政热点","民生大事","国际要闻","军事战争"];
+let catEmoji={"时政热点":"🏛","民生大事":"🏠","国际要闻":"🌍","军事战争":"⚔"};
+let hotSources={"百度热搜":1,"头条热榜":1,"B站热搜":1,"微博热搜":1};
 
-// =============== Init ===============
-async function init() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/sw.js").catch(()=>{});
-  }
-  await loadData();
-  renderTabs();
-  renderContent();
+async function init(){
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+await loadData(false);renderTabs();renderContent();
 }
 
-// =============== Data ===============
-async function loadData() {
-  document.getElementById("status").textContent = "加载中...";
-  try {
-    let resp = await fetch("hotnews.json?t=" + Date.now());
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    data = await resp.json();
-    let d = new Date(data.updated || Date.now());
-    document.getElementById("updated").textContent = 
-      "🕐 " + d.toLocaleString("zh-CN",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
-    document.getElementById("status").textContent = 
-      "共 " + data.total + " 条热点";
-    renderTabs();
-    renderContent();
-  } catch(e) {
-    document.getElementById("status").textContent = "加载失败，下拉刷新重试";
-  }
+function fmt(d){return d.toLocaleString("zh-CN",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}
+
+async function loadData(refresh){
+let now=new Date();
+document.getElementById("status").textContent=refresh?"刷新中...":"加载中...";
+try{
+let r=await fetch("hotnews.json?t="+Date.now());
+data=await r.json();
+document.getElementById("dataTime").textContent="📡 数据: "+fmt(new Date(data.updated));
+let ft=new Date();
+document.getElementById("fetchTime").textContent="🔄 刷新: 刚刚";
+setTimeout(()=>{document.getElementById("fetchTime").textContent="🔄 刷新: "+ft.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"})},30000);
+document.getElementById("status").textContent="共 "+data.total+" 条";
+renderTabs();renderContent();
+}catch(e){
+document.getElementById("status").textContent="失败";
+document.getElementById("content").innerHTML='<div class="empty">加载失败<br><small>请检查网络后下拉刷新</small></div>';
+}}
+
+function renderTabs(){
+let h="";
+for(let c of categories){
+let n=0;
+if(data&&data.categories)n=c==="全部"?data.total:(data.categories[c]||[]).length;
+h+=`<button class="tab${c===activeTab?' active':''}" onclick="switchTab('${c}')">${catEmoji[c]||'📰'} ${c} <span style="font-size:11px;opacity:.7">${n}</span></button>`;
+}
+document.getElementById("tabs").innerHTML=h;
 }
 
-// =============== Tabs ===============
-function renderTabs() {
-  let html = "";
-  for (let cat of categories) {
-    let count = 0;
-    if (data && data.categories) {
-      if (cat === "全部") {
-        count = data.total || 0;
-      } else {
-        count = (data.categories[cat] || []).length;
-      }
-    }
-    html += `<button class="tab${cat===activeTab?' active':''}" onclick="switchTab('${cat}')">${(catEmoji[cat]||'📰')} ${cat}<span class="count">${count}</span></button>`;
-  }
-  document.getElementById("tabs").innerHTML = html;
+function switchTab(c){activeTab=c;renderTabs();renderContent()}
+function setSort(m){
+sortMode=m;
+document.querySelectorAll(".sort-btn").forEach(b=>b.classList.remove("active"));
+event.target.classList.add("active");
+renderContent();
 }
 
-function switchTab(cat) {
-  activeTab = cat;
-  renderTabs();
-  renderContent();
+function renderContent(){
+if(!data||!data.categories)return;
+let arts=[];
+if(activeTab==="全部")for(let c of categories.slice(1))arts=arts.concat((data.categories[c]||[]).map(i=>({...i,tabCat:c})));
+else arts=(data.categories[activeTab]||[]).map(i=>({...i,tabCat:activeTab}));
+if(sortMode==="time")arts.sort((a,b)=>new Date(b.published||0)-new Date(a.published||0));
+else if(sortMode==="hot")arts.sort((a,b)=>(b.score||0)-(a.score||0));
+else arts.sort((a,b)=>(b.newsworthiness||0)-(a.newsworthiness||0));
+if(!arts.length){document.getElementById("content").innerHTML='<div class="empty">暂无此类新闻</div>';return}
+let h="";
+for(let a of arts){
+let st=hotSources[a.source]?"hot":"rss";
+let ts="";try{let d=new Date(a.published),df=Math.floor((Date.now()-d)/6e4);ts=df<60?df+"分钟前":df<1440?Math.floor(df/60)+"小时前":d.toLocaleDateString("zh-CN",{month:"short",day:"numeric"})}catch(e){}
+let cl=activeTab==="全部"?`<span style="color:#e94560;font-size:10px">${catEmoji[a.tabCat]||''}${a.tabCat}</span>`:"";
+h+=`<div class="card" onclick="openLink('${(a.link||'').replace(/'/g,"\\'")}')"><div class="card-title">${esc(a.title_cn||a.title)}</div><div class="card-meta"><span class="card-source source-${st}">${a.source}</span>${cl}<span class="card-time">${ts}</span></div>${a.summary?`<div class="card-summary">${esc(a.summary)}</div>`:''}</div>`;
+}
+document.getElementById("content").innerHTML=h;
 }
 
-function setSort(mode) {
-  sortMode = mode;
-  document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active"));
-  document.querySelector(`.sort-btn[onclick="setSort('${mode}')"]`).classList.add("active");
-  renderContent();
-}
+function openLink(u){if(u)window.open(u,"_blank")}
+function esc(s){let d=document.createElement("div");d.textContent=s;return d.innerHTML}
 
-// =============== Content ===============
-function renderContent() {
-  if (!data || !data.categories) {
-    document.getElementById("content").innerHTML = '<div class="empty">暂无数据<br><small>请检查网络连接后下拉刷新</small></div>';
-    return;
-  }
-  
-  let articles = [];
-  if (activeTab === "全部") {
-    for (let cat of categories.slice(1)) {
-      let items = data.categories[cat] || [];
-      articles = articles.concat(items.map(i => ({...i, tabCat: cat})));
-    }
-  } else {
-    articles = (data.categories[activeTab] || []).map(i => ({...i, tabCat: activeTab}));
-  }
-  
-  // 排序
-  if (sortMode === "time") {
-    articles.sort((a,b) => new Date(b.published||0) - new Date(a.published||0));
-  } else if (sortMode === "hot") {
-    articles.sort((a,b) => (b.score||0) - (a.score||0));
-  } else {
-    // 综合 = newsworthiness
-    articles.sort((a,b) => (b.newsworthiness||0) - (a.newsworthiness||0));
-  }
-  
-  if (articles.length === 0) {
-    document.getElementById("content").innerHTML = '<div class="empty">暂无此类新闻</div>';
-    return;
-  }
-  
-  let html = "";
-  for (let art of articles) {
-    let sourceType = hotSources[art.source] ? "hot" : "rss";
-    let timeStr = "";
-    try {
-      let d = new Date(art.published);
-      let diff = Math.floor((Date.now() - d.getTime()) / 60000);
-      if (diff < 60) timeStr = diff + "分钟前";
-      else if (diff < 1440) timeStr = Math.floor(diff/60) + "小时前";
-      else timeStr = d.toLocaleDateString("zh-CN",{month:"short",day:"numeric"});
-    } catch(e) {}
-    
-    let catLabel = "";
-    if (activeTab === "全部") {
-      catLabel = `<span style="color:#e94560;font-size:10px">${catEmoji[art.tabCat]||''}${art.tabCat}</span>`;
-    }
-    
-    html += `
-    <div class="card" onclick="openLink('${(art.link||'').replace(/'/g,"\\'")}')">
-      <div class="card-title">${escapeHtml(art.title_cn || art.title)}</div>
-      <div class="card-meta">
-        <span class="card-source source-${sourceType}">${art.source}</span>
-        ${catLabel}
-        <span class="card-time">${timeStr}</span>
-      </div>
-      ${art.summary ? `<div class="card-summary">${escapeHtml(art.summary)}</div>` : ''}
-    </div>`;
-  }
-  
-  document.getElementById("content").innerHTML = html;
-}
+// pull to refresh
+let ts=0;
+document.addEventListener("touchstart",e=>{ts=e.touches[0].clientY},{passive:true});
+document.addEventListener("touchend",e=>{if(window.scrollY===0&&e.changedTouches[0].clientY-ts>80)loadData(true)});
 
-// =============== Actions ===============
-function openLink(url) {
-  if (url) window.open(url, "_blank");
-}
-
-function escapeHtml(str) {
-  let div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-// =============== Pull to Refresh ===============
-let touchStart = 0;
-document.addEventListener("touchstart", e => { touchStart = e.touches[0].clientY; }, {passive:true});
-document.addEventListener("touchend", e => {
-  if (window.scrollY === 0 && e.changedTouches[0].clientY - touchStart > 80) {
-    document.getElementById("status").textContent = "刷新中...";
-    loadData();
-  }
-});
-
-// =============== Install PWA ===============
-let deferredPrompt;
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  let banner = document.createElement("div");
-  banner.style.cssText = "background:rgba(233,69,96,.12);border:1px solid rgba(233,69,96,.25);border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px";
-  banner.innerHTML = `
-    <p style="font-size:13px;color:#e94560;flex:1;margin:0">📲 添加到主屏幕，像App一样使用</p>
-    <button style="padding:6px 14px;border-radius:16px;background:#e94560;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer" id="installBtn">立即添加</button>
-    <button onclick="this.parentElement.remove()" style="color:#666;background:none;border:none;font-size:18px;cursor:pointer;padding:4px">✕</button>
-  `;
-  document.querySelector(".content").prepend(banner);
-  document.getElementById("installBtn").onclick = async () => {
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    banner.remove();
-  };
-});
-
-// =============== Boot ===============
+// install
+let dp;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;
+let b=document.createElement("div");b.style.cssText="background:rgba(233,69,96,.12);border:1px solid rgba(233,69,96,.25);border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px";
+b.innerHTML='<p style="font-size:13px;color:#e94560;flex:1;margin:0">📲 添加到主屏幕</p><button style="padding:6px 14px;border-radius:16px;background:#e94560;color:#fff;border:none;font-size:12px;font-weight:600" id="ib">立即添加</button><button onclick="this.parentElement.remove()" style="color:#666;background:none;border:none;font-size:18px;cursor:pointer;padding:4px">✕</button>';
+document.querySelector(".content").prepend(b);
+document.getElementById("ib").onclick=async()=>{dp.prompt();await dp.userChoice;dp=null;b.remove()}});
 init();
 </script>
-
 </body>
 </html>
